@@ -105,11 +105,46 @@ public class ReviewController {
     
     @PostMapping
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
-    public ResponseEntity<ReviewDTO> createReview(@RequestBody Review review) {
+    public ResponseEntity<?> createReview(@RequestBody java.util.Map<String, Object> request) {
         try {
-            System.out.println("=== DEBUG: Creating review for user " + review.getUser().getId() + " and vehicle " + review.getVehicle().getId() + " ===");
-            System.out.println("=== DEBUG: Review status: " + review.getStatus() + " ===");
-            System.out.println("=== DEBUG: Review rating: " + review.getRating() + " ===");
+            System.out.println("=== DEBUG: Received review request: " + request + " ===");
+            
+            // Extract data from request
+            Long userId = null;
+            if (request.get("user") instanceof java.util.Map) {
+                userId = Long.valueOf(((java.util.Map<?, ?>) request.get("user")).get("id").toString());
+            } else if (request.get("userId") != null) {
+                userId = Long.valueOf(request.get("userId").toString());
+            }
+            
+            Long vehicleId = null;
+            if (request.get("vehicle") instanceof java.util.Map) {
+                vehicleId = Long.valueOf(((java.util.Map<?, ?>) request.get("vehicle")).get("id").toString());
+            } else if (request.get("vehicleId") != null) {
+                vehicleId = Long.valueOf(request.get("vehicleId").toString());
+            }
+            
+            Integer rating = Integer.valueOf(request.get("rating").toString());
+            String comment = request.get("comment") != null ? request.get("comment").toString() : "";
+            String statusStr = request.get("status") != null ? request.get("status").toString() : "PENDING";
+            
+            System.out.println("=== DEBUG: Creating review for user " + userId + " and vehicle " + vehicleId + " ===");
+            System.out.println("=== DEBUG: Review status: " + statusStr + " ===");
+            System.out.println("=== DEBUG: Review rating: " + rating + " ===");
+            
+            // Create Review entity
+            Review review = new Review();
+            com.drivenow.entity.User user = new com.drivenow.entity.User();
+            user.setId(userId);
+            review.setUser(user);
+            
+            com.drivenow.entity.Vehicle vehicle = new com.drivenow.entity.Vehicle();
+            vehicle.setId(vehicleId);
+            review.setVehicle(vehicle);
+            
+            review.setRating(rating);
+            review.setComment(comment);
+            review.setStatus(Review.ReviewStatus.valueOf(statusStr.toUpperCase()));
             
             Review created = reviewService.createReview(review);
             
@@ -135,7 +170,7 @@ public class ReviewController {
         } catch (Exception e) {
             System.err.println("=== ERROR: Failed to create review: " + e.getMessage());
             e.printStackTrace();
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
         }
     }
     

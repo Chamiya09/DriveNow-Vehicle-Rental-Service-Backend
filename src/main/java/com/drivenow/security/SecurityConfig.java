@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/api/vehicles/**").permitAll()
                 .requestMatchers("/api/reviews/vehicle/**").permitAll()
+                .requestMatchers("/api/reviews/approved").permitAll()
                 .requestMatchers("/api/distance/**").permitAll()
                 // Contact & Message endpoints - allow both authenticated and unauthenticated access
                 .requestMatchers("/api/contact").permitAll()  // POST - submit new message (guests & users)
