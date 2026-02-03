@@ -128,31 +128,8 @@ public class DriverController {
                 return ResponseEntity.notFound().build();
             }
             
-            List<Booking> trips = bookingService.getBookingsByDriverId(driver.getId());
-            
-            // Calculate statistics
-            long totalTrips = trips.size();
-            long completedTrips = trips.stream()
-                    .filter(t -> t.getStatus() == Booking.BookingStatus.COMPLETED)
-                    .count();
-            long activeTrips = trips.stream()
-                    .filter(t -> t.getStatus() == Booking.BookingStatus.CONFIRMED || 
-                               t.getStatus() == Booking.BookingStatus.ONGOING ||
-                               t.getStatus() == Booking.BookingStatus.DRIVER_ASSIGNED)
-                    .count();
-            // Calculate driver commission (20% of completed trip prices)
-            double totalEarnings = trips.stream()
-                    .filter(t -> t.getStatus() == Booking.BookingStatus.COMPLETED)
-                    .mapToDouble(t -> t.getTotalPrice().doubleValue() * 0.20)
-                    .sum();
-            
-            Map<String, Object> stats = new HashMap<>();
-            stats.put("totalTrips", totalTrips);
-            stats.put("completedTrips", completedTrips);
-            stats.put("activeTrips", activeTrips);
-            stats.put("totalEarnings", totalEarnings);
-            stats.put("commissionRate", 0.20);
-            stats.put("averageRating", 4.8); // This should come from reviews
+            // Use UserService method to get stats with percentage changes
+            Map<String, Object> stats = userService.getDriverStats(driver.getId());
             
             return ResponseEntity.ok(stats);
         } catch (Exception e) {

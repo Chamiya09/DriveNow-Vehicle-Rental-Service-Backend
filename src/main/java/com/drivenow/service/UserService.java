@@ -1,5 +1,6 @@
 package com.drivenow.service;
 
+import com.drivenow.entity.Booking;
 import com.drivenow.entity.User;
 import com.drivenow.entity.UserSettings;
 import com.drivenow.repository.BookingRepository;
@@ -12,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -166,6 +168,15 @@ public class UserService {
         
         Long totalBookings = bookingRepository.countBookingsByUserId(userId);
         Double totalSpent = bookingRepository.getTotalSpentByUserId(userId);
+        Long activeBookings = getActiveBookingsCount(userId);
+        Long reviews = reviewRepository.countReviewsByUserId(userId);
+        
+        // Calculate percentage changes
+        String bookingsChange = calculatePercentageChange(userId, "bookings", false);
+        String activeBookingsChange = calculatePercentageChange(userId, "activeBookings", false);
+        String spentChange = calculatePercentageChange(userId, "spent", false);
+        Long reviewsLastMonth = reviewRepository.countReviewsByUserIdLastMonth(userId);
+        String reviewsChange = reviewsLastMonth > 0 ? "+" + reviewsLastMonth : "0";
         
         stats.put("userId", user.getId());
         stats.put("name", user.getName());
@@ -179,12 +190,140 @@ public class UserService {
         stats.put("available", user.getAvailable());
         stats.put("joinDate", user.getCreatedAt());
         stats.put("totalBookings", totalBookings);
+        stats.put("activeBookings", activeBookings);
         stats.put("totalSpent", totalSpent);
+        stats.put("reviews", reviews);
+        
+        // Percentage changes
+        stats.put("bookingsChange", bookingsChange);
+        stats.put("activeBookingsChange", activeBookingsChange);
+        stats.put("spentChange", spentChange);
+        stats.put("reviewsChange", reviewsChange);
         
         // Include driver documents
         stats.put("driversLicense", user.getDriversLicense());
         stats.put("vehicleRegistration", user.getVehicleRegistration());
         stats.put("insuranceCertificate", user.getInsuranceCertificate());
+        
+        return stats;
+    }
+    
+    private Long getActiveBookingsCount(Long userId) {
+        List<Booking> bookings = bookingRepository.findByUserId(userId);
+        return bookings.stream()
+            .filter(b -> b.getStatus() == Booking.BookingStatus.PENDING || 
+                        b.getStatus() == Booking.BookingStatus.CONFIRMED)
+            .count();
+    }
+    
+    private String calculatePercentageChange(Long userId, String type, boolean isDriver) {
+        LocalDate now = LocalDate.now();
+        LocalDate lastMonthStart = now.minusMonths(1).withDayOfMonth(1);
+        LocalDate lastMonthEnd = now.withDayOfMonth(1).minusDays(1);
+        LocalDate prevMonthStart = lastMonthStart.minusMonths(1);
+        LocalDate prevMonthEnd = lastMonthStart.minusDays(1);
+        
+        List<Booking> allBookings = isDriver ? 
+            bookingRepository.findByDriverId(userId) : 
+            bookingRepository.findByUserId(userId);
+        
+        if (type.equals("bookings")) {
+            long lastMonth = allBookings.stream()
+                .filter(b -> !b.getCreatedAt().toLocalDate().isBefore(lastMonthStart) && 
+                            !b.getCreatedAt().toLocalDate().isAfter(lastMonthEnd))
+                .count();
+            long prevMonth = allBookings.stream()
+                .filter(b -> !b.getCreatedAt().toLocalDate().isBefore(prevMonthStart) && 
+                            !b.getCreatedAt().toLocalDate().isAfter(prevMonthEnd))
+                .count();
+            return calculatePercentage(lastMonth, prevMonth);
+        } else if (type.equals("activeBookings")) {
+            long lastMonth = allBookings.stream()
+                .filter(b -> (b.getStatus() == Booking.BookingStatus.PENDING || 
+                             b.getStatus() == Booking.BookingStatus.CONFIRMED) &&
+                            !b.getCreatedAt().toLocalDate().isBefore(lastMonthStart) && 
+                            !b.getCreatedAt().toLocalDate().isAfter(lastMonthEnd))
+                .count();
+            long prevMonth = allBookings.stream()
+                .filter(b -> (b.getStatus() == Booking.BookingStatus.PENDING || 
+                             b.getStatus() == Booking.BookingStatus.CONFIRMED) &&
+                            !b.getCreatedAt().toLocalDate().isBefore(prevMonthStart) && 
+                            !b.getCreatedAt().toLocalDate().isAfter(prevMonthEnd))
+                .count();
+            return calculatePercentage(lastMonth, prevMonth);
+        } else if (type.equals("spent") || type.equals("earnings")) {
+            double lastMonth = allBookings.stream()
+                .filter(b -> b.getPaymentStatus() == Booking.PaymentStatus.COMPLETED &&
+                            !b.getCreatedAt().toLocalDate().isBefore(lastMonthStart) && 
+                            !b.getCreatedAt().toLocalDate().isAfter(lastMonthEnd))
+                .mapToDouble(b -> isDriver ? b.getTotalPrice() * 0.15 : b.getTotalPrice())
+                .sum();
+            double prevMonth = allBookings.stream()
+                .filter(b -> b.getPaymentStatus() == Booking.PaymentStatus.COMPLETED &&
+                            !b.getCreatedAt().toLocalDate().isBefore(prevMonthStart) && 
+                            !b.getCreatedAt().toLocalDate().isAfter(prevMonthEnd))
+                .mapToDouble(b -> isDriver ? b.getTotalPrice() * 0.15 : b.getTotalPrice())
+                .sum();
+            return calculatePercentage((long)lastMonth, (long)prevMonth);
+        }
+        return "+0%";
+    }
+    
+    private String calculatePercentage(long current, long previous) {
+        if (previous == 0) {
+            return current > 0 ? "+100%" : "0%";
+        }
+        double change = ((double)(current - previous) / previous) * 100;
+        if (change > 0) {
+            return "+" + Math.round(change) + "%";
+        } else if (change < 0) {
+            return Math.round(change) + "%";
+        }
+        return "0%";
+    }
+    
+    public Map<String, Object> getDriverStats(Long driverId) {
+        User driver = getUserById(driverId);
+        Map<String, Object> stats = new HashMap<>();
+        
+        List<Booking> trips = bookingRepository.findByDriverId(driverId);
+        
+        long totalTrips = trips.size();
+        long completedTrips = trips.stream()
+                .filter(t -> t.getStatus() == Booking.BookingStatus.COMPLETED)
+                .count();
+        long activeTrips = trips.stream()
+                .filter(t -> t.getStatus() == Booking.BookingStatus.CONFIRMED || 
+                           t.getStatus() == Booking.BookingStatus.ONGOING ||
+                           t.getStatus() == Booking.BookingStatus.DRIVER_ASSIGNED)
+                .count();
+        double totalEarnings = trips.stream()
+                .filter(t -> t.getStatus() == Booking.BookingStatus.COMPLETED &&
+                           t.getPaymentStatus() == Booking.PaymentStatus.COMPLETED)
+                .mapToDouble(t -> t.getTotalPrice() * 0.15)
+                .sum();
+        Double averageRating = reviewRepository.getAverageRatingForDriver(driverId);
+        
+        // Calculate percentage changes
+        String tripsChange = calculatePercentageChange(driverId, "bookings", true);
+        String activeTripsChange = calculatePercentageChange(driverId, "activeBookings", true);
+        String earningsChange = calculatePercentageChange(driverId, "earnings", true);
+        
+        stats.put("userId", driver.getId());
+        stats.put("name", driver.getName());
+        stats.put("email", driver.getEmail());
+        stats.put("totalTrips", totalTrips);
+        stats.put("completedTrips", completedTrips);
+        stats.put("activeTrips", activeTrips);
+        stats.put("totalEarnings", totalEarnings);
+        stats.put("averageRating", averageRating != null ? averageRating : 0.0);
+        stats.put("commissionRate", 0.15);
+        
+        // Percentage changes
+        stats.put("tripsChange", tripsChange);
+        stats.put("activeTripsChange", activeTripsChange);
+        stats.put("earningsChange", earningsChange);
+        stats.put("ratingChange", "+0.2");
         
         return stats;
     }

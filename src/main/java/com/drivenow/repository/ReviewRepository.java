@@ -35,4 +35,13 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     
     @Query("SELECT COUNT(r) FROM Review r WHERE r.vehicle.id = :vehicleId AND r.status = 'APPROVED'")
     Long getReviewCountForVehicle(Long vehicleId);
+    
+    @Query("SELECT COUNT(r) FROM Review r WHERE r.user.id = :userId")
+    Long countReviewsByUserId(Long userId);
+    
+    @Query("SELECT COUNT(r) FROM Review r WHERE r.user.id = :userId AND r.createdAt >= DATEADD('MONTH', -1, CURRENT_DATE)")
+    Long countReviewsByUserIdLastMonth(Long userId);
+    
+    @Query("SELECT AVG(dr.rating) FROM DriverReview dr WHERE dr.driver.id = :driverId AND dr.status = 'APPROVED'")
+    Double getAverageRatingForDriver(Long driverId);
 }
