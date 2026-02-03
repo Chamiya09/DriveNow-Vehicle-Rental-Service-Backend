@@ -38,16 +38,19 @@ public class UserSettings {
     private Boolean promotionalEmails = false;
     
     @Column(nullable = false)
-    private Boolean profileVisibility = true;
+    private Boolean bookingReminders = true;
+    
+    @Column(nullable = false)
+    private Boolean vehicleAvailabilityAlerts = false;
     
     @Column(nullable = false)
     private Boolean showBookingHistory = false;
     
     @Column(nullable = false)
-    private String language = "English";
+    private Boolean autoRenewBookings = false;
     
     @Column(nullable = false)
-    private String currency = "USD";
+    private String preferredPickupTime = "09:00";
     
     @Column(nullable = false)
     private String theme = "light";

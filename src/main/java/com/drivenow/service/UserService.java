@@ -208,17 +208,20 @@ public class UserService {
         if (newSettings.getPromotionalEmails() != null) {
             settings.setPromotionalEmails(newSettings.getPromotionalEmails());
         }
-        if (newSettings.getProfileVisibility() != null) {
-            settings.setProfileVisibility(newSettings.getProfileVisibility());
+        if (newSettings.getBookingReminders() != null) {
+            settings.setBookingReminders(newSettings.getBookingReminders());
+        }
+        if (newSettings.getVehicleAvailabilityAlerts() != null) {
+            settings.setVehicleAvailabilityAlerts(newSettings.getVehicleAvailabilityAlerts());
         }
         if (newSettings.getShowBookingHistory() != null) {
             settings.setShowBookingHistory(newSettings.getShowBookingHistory());
         }
-        if (newSettings.getLanguage() != null) {
-            settings.setLanguage(newSettings.getLanguage());
+        if (newSettings.getAutoRenewBookings() != null) {
+            settings.setAutoRenewBookings(newSettings.getAutoRenewBookings());
         }
-        if (newSettings.getCurrency() != null) {
-            settings.setCurrency(newSettings.getCurrency());
+        if (newSettings.getPreferredPickupTime() != null) {
+            settings.setPreferredPickupTime(newSettings.getPreferredPickupTime());
         }
         if (newSettings.getTheme() != null) {
             settings.setTheme(newSettings.getTheme());
