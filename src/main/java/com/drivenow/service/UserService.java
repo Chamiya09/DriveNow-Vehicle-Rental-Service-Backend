@@ -256,13 +256,13 @@ public class UserService {
                 .filter(b -> b.getPaymentStatus() == Booking.PaymentStatus.COMPLETED &&
                             !b.getCreatedAt().toLocalDate().isBefore(lastMonthStart) && 
                             !b.getCreatedAt().toLocalDate().isAfter(lastMonthEnd))
-                .mapToDouble(b -> isDriver ? b.getTotalPrice() * 0.15 : b.getTotalPrice())
+                .mapToDouble(b -> isDriver ? b.getTotalPrice().doubleValue() * 0.15 : b.getTotalPrice().doubleValue())
                 .sum();
             double prevMonth = allBookings.stream()
                 .filter(b -> b.getPaymentStatus() == Booking.PaymentStatus.COMPLETED &&
                             !b.getCreatedAt().toLocalDate().isBefore(prevMonthStart) && 
                             !b.getCreatedAt().toLocalDate().isAfter(prevMonthEnd))
-                .mapToDouble(b -> isDriver ? b.getTotalPrice() * 0.15 : b.getTotalPrice())
+                .mapToDouble(b -> isDriver ? b.getTotalPrice().doubleValue() * 0.15 : b.getTotalPrice().doubleValue())
                 .sum();
             return calculatePercentage((long)lastMonth, (long)prevMonth);
         }
@@ -300,7 +300,7 @@ public class UserService {
         double totalEarnings = trips.stream()
                 .filter(t -> t.getStatus() == Booking.BookingStatus.COMPLETED &&
                            t.getPaymentStatus() == Booking.PaymentStatus.COMPLETED)
-                .mapToDouble(t -> t.getTotalPrice() * 0.15)
+                .mapToDouble(t -> t.getTotalPrice().doubleValue() * 0.15)
                 .sum();
         Double averageRating = reviewRepository.getAverageRatingForDriver(driverId);
         
