@@ -75,6 +75,7 @@ public class AuthController {
                 userInfo.put("email", user.getEmail());
                 userInfo.put("role", user.getRole().name());
                 userInfo.put("phone", user.getPhone());
+                userInfo.put("address", user.getAddress());
                 userInfo.put("profileImage", user.getProfileImage());
                 userInfo.put("status", user.getStatus().name());
                 userInfo.put("licenseNumber", user.getLicenseNumber());

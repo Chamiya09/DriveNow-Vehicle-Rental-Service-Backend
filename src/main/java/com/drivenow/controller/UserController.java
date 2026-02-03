@@ -163,6 +163,7 @@ public class UserController {
             profile.put("name", user.getName());
             profile.put("email", user.getEmail());
             profile.put("phone", user.getPhone());
+            profile.put("address", user.getAddress());
             profile.put("role", user.getRole().name());
             profile.put("status", user.getStatus().name());
             profile.put("profileImage", user.getProfileImage());

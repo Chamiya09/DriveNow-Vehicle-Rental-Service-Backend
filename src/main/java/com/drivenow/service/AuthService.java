@@ -36,6 +36,7 @@ public class AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setPhone(request.getPhone());
+        user.setAddress(request.getAddress());
         
         // Set role, default to USER
         if (request.getRole() != null && !request.getRole().isEmpty()) {

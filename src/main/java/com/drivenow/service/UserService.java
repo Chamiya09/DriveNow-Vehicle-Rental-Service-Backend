@@ -68,6 +68,9 @@ public class UserService {
         if (userDetails.getPhone() != null) {
             user.setPhone(userDetails.getPhone());
         }
+        if (userDetails.getAddress() != null) {
+            user.setAddress(userDetails.getAddress());
+        }
         if (userDetails.getProfileImage() != null) {
             user.setProfileImage(userDetails.getProfileImage());
         }
@@ -168,6 +171,7 @@ public class UserService {
         stats.put("name", user.getName());
         stats.put("email", user.getEmail());
         stats.put("phone", user.getPhone());
+        stats.put("address", user.getAddress());
         stats.put("role", user.getRole().name());
         stats.put("status", user.getStatus().name());
         stats.put("profileImage", user.getProfileImage());

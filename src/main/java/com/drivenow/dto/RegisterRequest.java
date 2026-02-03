@@ -12,6 +12,7 @@ public class RegisterRequest {
     private String email;
     private String password;
     private String phone;
+    private String address;
     private String role; // Optional, defaults to USER
     private String licenseNumber; // For drivers
     private Boolean available; // For drivers
