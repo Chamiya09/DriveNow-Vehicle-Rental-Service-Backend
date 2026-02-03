@@ -30,6 +30,17 @@ public class UserController {
         }
     }
     
+    @GetMapping("/driver/{id}/stats")
+    @PreAuthorize("hasAnyRole('DRIVER', 'ADMIN')")
+    public ResponseEntity<Map<String, Object>> getDriverStats(@PathVariable Long id) {
+        try {
+            Map<String, Object> stats = userService.getDriverStats(id);
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<User>> getAllUsers() {
