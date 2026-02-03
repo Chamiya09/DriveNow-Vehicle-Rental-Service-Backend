@@ -19,24 +19,46 @@ public class VehicleService {
     private final ReviewRepository reviewRepository;
     
     public Vehicle getVehicleById(Long id) {
-        return vehicleRepository.findById(id)
+        Vehicle vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vehicle not found"));
+        // Update rating from reviews
+        updateVehicleRatingFromReviews(vehicle);
+        return vehicle;
     }
     
     public List<Vehicle> getAllVehicles() {
-        return vehicleRepository.findAll();
+        List<Vehicle> vehicles = vehicleRepository.findAll();
+        // Update ratings for all vehicles from reviews
+        vehicles.forEach(this::updateVehicleRatingFromReviews);
+        return vehicles;
+    }
+    
+    private void updateVehicleRatingFromReviews(Vehicle vehicle) {
+        Double averageRating = reviewRepository.getAverageRatingForVehicle(vehicle.getId());
+        Long reviewCount = reviewRepository.getReviewCountForVehicle(vehicle.getId());
+        vehicle.setRating(averageRating != null ? averageRating : 0.0);
+        vehicle.setReviewCount(reviewCount != null ? reviewCount.intValue() : 0);
     }
     
     public List<Vehicle> getAvailableVehicles() {
-        return vehicleRepository.findByAvailableTrue();
+        List<Vehicle> vehicles = vehicleRepository.findByAvailableTrue();
+        // Update ratings for all vehicles from reviews
+        vehicles.forEach(this::updateVehicleRatingFromReviews);
+        return vehicles;
     }
     
     public List<Vehicle> getVehiclesByCategory(String category) {
-        return vehicleRepository.findByCategory(Vehicle.VehicleCategory.valueOf(category.toUpperCase()));
+        List<Vehicle> vehicles = vehicleRepository.findByCategory(Vehicle.VehicleCategory.valueOf(category.toUpperCase()));
+        // Update ratings for all vehicles from reviews
+        vehicles.forEach(this::updateVehicleRatingFromReviews);
+        return vehicles;
     }
     
     public List<Vehicle> getVehiclesByPriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
-        return vehicleRepository.findByPriceRange(minPrice, maxPrice);
+        List<Vehicle> vehicles = vehicleRepository.findByPriceRange(minPrice, maxPrice);
+        // Update ratings for all vehicles from reviews
+        vehicles.forEach(this::updateVehicleRatingFromReviews);
+        return vehicles;
     }
     
     @Transactional
