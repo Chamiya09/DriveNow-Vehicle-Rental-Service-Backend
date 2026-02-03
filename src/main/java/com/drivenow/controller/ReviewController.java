@@ -174,6 +174,40 @@ public class ReviewController {
         }
     }
     
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    public ResponseEntity<?> updateReview(@PathVariable Long id, @RequestBody java.util.Map<String, Object> request) {
+        try {
+            System.out.println("=== DEBUG: Updating review " + id + " ===");
+            System.out.println("=== DEBUG: Request data: " + request + " ===");
+            
+            Review existingReview = reviewService.getReviewById(id);
+            
+            // Update fields if provided
+            if (request.containsKey("rating")) {
+                existingReview.setRating(Integer.valueOf(request.get("rating").toString()));
+            }
+            if (request.containsKey("comment")) {
+                existingReview.setComment(request.get("comment").toString());
+            }
+            // When user edits, set status to PENDING for re-approval
+            if (request.containsKey("status")) {
+                String statusStr = request.get("status").toString();
+                existingReview.setStatus(Review.ReviewStatus.valueOf(statusStr.toUpperCase()));
+            }
+            
+            Review updated = reviewService.updateReview(existingReview);
+            ReviewDTO dto = ReviewDTO.fromEntity(updated);
+            
+            System.out.println("=== DEBUG: Review updated successfully ===");
+            return ResponseEntity.ok(dto);
+        } catch (Exception e) {
+            System.err.println("=== ERROR: Failed to update review: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(java.util.Map.of("error", e.getMessage()));
+        }
+    }
+    
     @PutMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Review> updateReviewStatus(@PathVariable Long id, @RequestParam String status) {

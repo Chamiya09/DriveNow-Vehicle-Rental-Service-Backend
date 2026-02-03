@@ -104,6 +104,24 @@ public class ReviewService {
     }
     
     @Transactional
+    public Review updateReview(Review review) {
+        System.out.println("=== SERVICE: Updating review ID: " + review.getId() + " ===");
+        System.out.println("=== SERVICE: New rating: " + review.getRating() + " ===");
+        System.out.println("=== SERVICE: New status: " + review.getStatus() + " ===");
+        
+        Review savedReview = reviewRepository.save(review);
+        
+        System.out.println("=== SERVICE: Review updated successfully ===");
+        
+        // Update vehicle rating if the review is approved
+        if (review.getStatus() == Review.ReviewStatus.APPROVED) {
+            vehicleService.updateVehicleRating(review.getVehicle().getId());
+        }
+        
+        return savedReview;
+    }
+    
+    @Transactional
     public Review updateReviewStatus(Long id, String status) {
         Review review = getReviewById(id);
         Review.ReviewStatus newStatus = Review.ReviewStatus.valueOf(status.toUpperCase());
