@@ -1,0 +1,25 @@
+package com.drivenow.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class RegisterRequest {
+    private String name;
+    private String email;
+    private String password;
+    private String phone;
+    private String address;
+    private String role; // Optional, defaults to USER
+    private String licenseNumber; // For drivers
+    private Boolean available; // For drivers
+    private String profileImage; // Profile image URL
+    
+    // Driver documents (base64 encoded)
+    private String driversLicense;
+    private String vehicleRegistration;
+    private String insuranceCertificate;
+}
